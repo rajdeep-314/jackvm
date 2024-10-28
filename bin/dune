@@ -1,4 +1,4 @@
 (executable
  (public_name jackvm)
  (name main)
- (libraries jackvm hack))
+ (libraries jackvm assembler))

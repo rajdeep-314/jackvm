@@ -1,6 +1,6 @@
 # Translations of some VM-instructions to HACK ASM
 
-## Sub-routines:
+## Sub-routines
 
 - `load_top` : loads the stack top to D and decrements SP
 ```
@@ -10,7 +10,7 @@
 ```
 
 
-## Stack manipulation:
+## Stack manipulation
 
 - push seg n
 ```
@@ -32,7 +32,9 @@
 ```
 
 
-## Computation:
+## Computation
+
+### Arithmetic
 
 - add
 ```
@@ -55,4 +57,31 @@
     @SP
     A=M-1
     M=-M
+```
+
+### Relational
+
+- eq        (not efficient at all)
+```
+    @SP
+    AM=M-1
+    D=M
+    @SP
+    A=M-1
+    D=M-D
+
+    @store_one
+    D;JEQ           // change this for `lt` and `gt`
+    @SP
+    A=M-1
+    M=0
+    @end
+    0;JMP
+
+    (store_one)
+    @SP
+    A=M-1
+    M=-1
+
+    (end)
 ```
