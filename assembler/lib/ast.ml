@@ -59,3 +59,45 @@ let resolve_symbol (symbol : 'v) (symbol_table : 'v table) (curr_address : addre
         let () = Hashtbl.add symbol_table symbol curr_address in
         (curr_address, curr_address + 1)
 
+
+(* helper functions to generate abstract ASM instructions *)
+
+module Helper = struct
+    let at x = At x
+    let ainst x = Ainst x
+    let ldef x = Ldef x
+
+    let a = [A]
+    let d = [D]
+    let m = [M]
+    let am = [A; M]
+    let md = [M; D]
+    let areg = A
+    let mreg = M
+    let dreg = D
+    let one = Const One
+    let minusone = Const MinusOne
+    let zero = Const Zero
+
+    let jeq = JEQ
+    let jlt = JLT
+    let jgt = JGT
+    let jne = JNE
+
+    let iden r = UnaryOp (Identity, r)
+    let bnot r = UnaryOp (BNot, r)
+    let neg r = UnaryOp (Neg, r)
+    let succ r = UnaryOp (Succ, r)
+    let pred r = UnaryOp (Pred, r)
+
+    let dplus r = BinaryOp (Add, r)
+    let dminus r = BinaryOp (Sub, r)
+    let minusd r = BinaryOp (SubFrom, r)
+    let dand r = BinaryOp (BAnd, r)
+    let dor r = BinaryOp (BOr, r)
+
+    (* assigns : dest -> comp -> 'v inst *)
+    let assign regs expr = Cinst (regs, expr, NullJump)
+    let djump jmp = Cinst ([D], Const Zero, jmp)
+    let uncond_jump = Cinst ([], Const Zero, JMP)
+end

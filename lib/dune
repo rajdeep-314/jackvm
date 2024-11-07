@@ -1,2 +1,3 @@
 (library
- (name jackvm))
+ (name jackvm)
+ (libraries assembler))

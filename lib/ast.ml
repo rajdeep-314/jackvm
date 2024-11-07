@@ -1,3 +1,10 @@
+(*
+    ast.ml
+    
+    captures the abstract syntax of the VM using
+    variants and records
+*)
+
 type segment =
     | Local
     | Argument
@@ -8,35 +15,27 @@ type segment =
     | Pointer
     | Temp
 
-type ('f, 'l) instruction =
+type ('f, 'l) inst =
     | Add | Sub | Neg           (* arithmetic *)
     | Eq | Lt | Gt              (* relational *)
     | And | Or | Not            (* bitwise *)
 
+    (* stack manipulation *)
     | Push of segment * int
     | Pop of segment * int
 
+    (* branching *)
     | Label of 'l
     | Goto of 'l
     | IfGoto of 'l
 
-    | Function of 'f * int
+    (* functions *)
     | Call of 'f * int
     | Return
 
-type ('f, 'l) program = ('f, 'l) instruction list
+type ('f, 'l) func =
+    { name : 'f;
+      args : int;
+      body : ('f, 'l) inst list }
 
-type func_name = Fname of string
-type label_name = Lname of string
-
-(* 'f -> function name type
-   'l -> label name type
-   's -> symbol type  *)
-type ('f, 'l, 's) asminst = 
-    | Flabel of 'f
-    | Llabel of 'l
-    | Symbol of 's
-
-
-(* translate : ('f, 'l) program -> ('f, 'l, 's) asminst Assembler.program *)
-(* start by testing dependencies *)
+type ('f, 'l) program = ('f, 'l) func list
