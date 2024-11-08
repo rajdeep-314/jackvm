@@ -61,7 +61,6 @@ let resolve_symbol (symbol : 'v) (symbol_table : 'v table) (curr_address : addre
 
 
 (* helper functions to generate abstract ASM instructions *)
-
 module Helper = struct
     let at x = At x
     let ainst x = Ainst x
@@ -98,6 +97,6 @@ module Helper = struct
 
     (* assigns : dest -> comp -> 'v inst *)
     let assign regs expr = Cinst (regs, expr, NullJump)
-    let djump jmp = Cinst ([D], Const Zero, jmp)
+    let djump jmp = Cinst ([], UnaryOp (Identity, D), jmp)
     let uncond_jump = Cinst ([], Const Zero, JMP)
 end

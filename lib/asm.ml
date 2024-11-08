@@ -28,3 +28,5 @@ let predefs =
         ("SP", 0); ("LCL", 1); ("ARG", 2); ("THIS", 3); ("THAT", 4)] in
     List.map (fun (x, y) -> (Symb x, y)) ls
 
+let table : (((func_name, label_name, string) asminst, int) Hashtbl.t)=
+    Hashtbl.of_seq (List.to_seq predefs)

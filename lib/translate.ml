@@ -39,16 +39,19 @@ let comp_routines n op = [
     goto_top;
     [
         assign d (minusd mreg);
-        ldef (CompSucc n);
-        djump op;
-        assign m (zero);
-        ainst (CompEnd n);
-        uncond_jump;
-        ldef (CompEnd n)
+        ainst (CompSucc n);
+        djump op
     ];
     goto_top;
     [
-        assign m (neg mreg);
+        assign m (zero);
+        ainst (CompEnd n);
+        uncond_jump;
+        ldef (CompSucc n)
+    ];
+    goto_top;
+    [
+        assign m (minusone);
         ldef (CompEnd n)
     ]]
 
@@ -64,6 +67,7 @@ let translate_or = translate_binop (dor mreg)
 let translate_neg = translate_unop (neg mreg)
 let translate_not = translate_unop (bnot mreg)
 
+(* n denotes the "index" of the comparison instruction *)
 let translate_eq n = translate_comp n jeq
 let translate_lt n = translate_comp n jlt
 let translate_gt n = translate_comp n jgt
@@ -122,5 +126,33 @@ let pop_routines seg n =
 let translate_pop seg n = List.concat (pop_routines seg n)
 
 
-(* let translate_push seg offset = *)
-(* let translate_pop seg offset = *) 
+(* functions *)
+
+(* begin here *)
+
+
+(* for testing *)
+
+let translate_inst inst n =
+    match inst with
+    | Add -> translate_add
+    | Sub -> translate_sub
+    | Neg -> translate_neg
+    | And -> translate_and
+    | Or -> translate_or
+    | Not -> translate_not
+    | Eq -> translate_eq n
+    | Lt -> translate_lt n
+    | Gt -> translate_gt n
+    | Push (seg, n) -> translate_push seg n
+    | Pop (seg, n) -> translate_pop seg n
+    | _ -> []
+
+let rec nat_nums n =
+    if n = 0 then []
+    else nat_nums (n-1) @ [n]
+
+let translate_prog prog =
+    let lns = nat_nums (List.length prog) in
+    let routines = List.map2 translate_inst prog lns in
+    List.concat routines
