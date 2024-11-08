@@ -76,7 +76,7 @@ let translate_gt n = translate_comp n jgt
 (* branching operations *)
 
 (* translation for `label ln` inside function `fn` *)
-let translate_label ln fn = Llabel (ln, fn)
+let translate_label ln fn = [ldef (Llabel (ln, fn))]
 let translate_goto ln fn = [ainst (Llabel (ln, fn)); uncond_jump]
 let translate_ifgoto ln fn =
     let routines = [
@@ -89,20 +89,30 @@ let translate_ifgoto ln fn =
 
 (* base addresses of segments *)
 let seg_base = function
-    | Local -> 1
-    | Argument -> 2
     | This -> 3
     | That -> 4
-    | Constant -> -1        (* it's a pseudo-segment, no base address for it *)
     | Static -> 16
     | Pointer -> 3
     | Temp -> 5
+    | _ -> -1               (* different translation mechanisms needed *)
 
-let push_routines seg n =
+let seg_pointer = function
+    | Local -> 1
+    | Argument -> 2
+    | _ -> -1               (* different translation mechanisms needed *)
+
+let push_routines_base seg n =
     let base = seg_base seg in
     [
         load_base_offset base n;
         push_d;
+    ]
+
+let push_routines_pointer seg n =
+    let pointer = seg_pointer seg in
+    [
+        load_pointer_offset pointer n;
+        push_d
     ]
 
 let translate_push_const n = 
@@ -112,18 +122,42 @@ let translate_push_const n =
 let translate_push seg n = 
     match seg with
     | Constant -> translate_push_const n
-    | other -> List.concat (push_routines other n)
+    | Local -> List.concat (push_routines_pointer Local n)
+    | Argument -> List.concat (push_routines_pointer Argument n)
+    | other -> List.concat (push_routines_base other n)
             
-let pop_routines seg n =
+let pop_routines_base seg n =
     let base = seg_base seg in
-    [load_top;
+    [
+        load_top;
         [
             at (base + n);
             assign m (iden dreg)
         ]
     ]
 
-let translate_pop seg n = List.concat (pop_routines seg n)
+let pop_routines_pointer seg n =
+    let pointer = seg_pointer seg in
+    [
+        load_pointer_offset pointer n;
+        [
+            assign d (iden areg);
+            at 5;                       (* temp[0] is the address 5 *)
+            assign m (iden dreg);
+        ];
+        load_top;
+        [
+            at 5;
+            assign a (iden mreg);
+            assign m (iden dreg);
+        ]
+    ]
+
+let translate_pop seg n =
+    match seg with
+    | Local -> List.concat (pop_routines_pointer Local n)
+    | Argument -> List.concat (pop_routines_pointer Argument n)
+    | other -> List.concat (pop_routines_base other n)
 
 
 (* functions *)
@@ -146,13 +180,26 @@ let translate_inst inst n =
     | Gt -> translate_gt n
     | Push (seg, n) -> translate_push seg n
     | Pop (seg, n) -> translate_pop seg n
+    (* only for temp testing *)
+    | Label name -> translate_label name (Fname "")
+    | Goto name -> translate_goto name (Fname "")
+    | IfGoto name -> translate_ifgoto name (Fname "")
+    (* /only for temp testing *)
     | _ -> []
 
 let rec nat_nums n =
     if n = 0 then []
     else nat_nums (n-1) @ [n]
 
+(* and infinite loop to be put at the end of
+   the translated ASM program *)
+let prog_end = [
+        ldef (Symb "end_of_prog");
+        ainst (Symb "end_of_prog");
+        uncond_jump
+    ]
+
 let translate_prog prog =
     let lns = nat_nums (List.length prog) in
     let routines = List.map2 translate_inst prog lns in
-    List.concat routines
+    List.concat routines @ prog_end

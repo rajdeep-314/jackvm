@@ -41,6 +41,7 @@ type ('f, 'l) func =
 type ('f, 'l) program = ('f, 'l) func list
 
 module Helper = struct
+    include Asm
     let push s n = Push (s, n)
     let pop s n = Pop (s, n)
     let add = Add
@@ -52,9 +53,9 @@ module Helper = struct
     let band = And
     let bor = Or
     let bnot = Not
-    let label x = Label x
-    let goto x = Goto x
-    let ifgoto x = IfGoto x
+    let label x = Label (Lname x)
+    let goto x = Goto (Lname x)
+    let ifgoto x = IfGoto (Lname x)
 
     (* segments *)
     let local = Local

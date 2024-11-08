@@ -20,16 +20,27 @@ let load_top = [
     assign am (pred mreg);
     assign d (iden mreg) ]
 
-(* loads (base + off) into A *)
+(* loads `base + off` into A *)
 let goto_base_offset base off = [
     at off;
     assign d (iden areg);
     at base;
     assign a (dplus mreg) ]
 
-(* loads RAM[base + off] into D *)
+(* loads `RAM[base + off]` into D *)
 let load_base_offset base off = 
     goto_base_offset base off @ [assign d (iden mreg)]
+
+(* loads `*pointer + off` into A *)
+let goto_pointer_offset pointer off = [
+    at off;
+    assign d (iden areg);
+    at pointer;
+    assign a (dplus mreg) ]
+
+(* loads `RAM[*pointer + off]` into D *)
+let load_pointer_offset pointer off =
+    goto_pointer_offset pointer off @ [assign d (iden mreg)]
 
 (* increments SP by 1 *)
 let incr_sp = [
