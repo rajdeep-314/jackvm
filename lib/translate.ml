@@ -171,7 +171,7 @@ let call_routines fname nargs = [
         at 5;
         assign m (iden dreg);
         ainst (Symb "SP");
-        assign d (iden areg);
+        assign d (iden mreg);
         at 5;
         assign m (dminus mreg);
         ainst (Fret fname);
@@ -182,22 +182,13 @@ let call_routines fname nargs = [
     push_pointer "ARG";
     push_pointer "THIS";
     push_pointer "THAT";
-    (* x *)
+
     get_from_address 5;
     put_to_symb "ARG";
     get_from_symb "SP";
     put_to_symb "LCL";
-    (* x *)
-    [
-        (* at 5; *)
-        (* assign d (iden mreg); *)
-        (* ainst (Symb "ARG"); *)
-        (* assign m (iden dreg); *)
-        (* ainst (Symb "SP"); *)
-        (* assign d (iden mreg); *)
-        (* ainst (Symb "LCL"); *)
-        (* assign m (iden dreg); *)
 
+    [
         ainst (Fcall fname);
         uncond_jump;                (* transferring control to the function *)
         ldef (Fret fname);          (* defining the label where fname should return to *)
@@ -208,8 +199,6 @@ let translate_call fname nargs = List.concat (call_routines fname nargs)
 let return_routines = [
     load_top;
     put_to_address 5;
-    get_from_symb "ARG";
-    put_to_address 6;
     get_from_symb "LCL";
     put_to_symb "SP";
 
@@ -219,13 +208,11 @@ let return_routines = [
     restore_pointer "LCL";
     
     load_top;
-    put_to_address 7;
-    get_from_address 6;
-    put_to_symb "SP";
+    put_to_address 6;
     get_from_address 5;
     push_d;
     [
-        at 7;
+        at 6;
         assign a (iden mreg);
         uncond_jump
     ] ]
@@ -285,58 +272,11 @@ let exit_asm = [ ainst (Symb "ProgEnd"); uncond_jump ]
 
 let translate_prog (prog : ('f, 'l) program) =
     let trans = List.concat (List.map translate_function prog) in
-    (* let complete_trans = entry_asm @ exit_asm @ trans in *)
-    let complete_trans = entry_asm @ trans in
+    let complete_trans = entry_asm @ exit_asm @ trans in
+    (* let complete_trans = entry_asm @ trans in *)
     let end_subroutine = [
             ldef (Symb "ProgEnd");
             ainst (Symb "ProgEnd");
             uncond_jump ] in
     complete_trans @ end_subroutine
 
-
-(*
-some ideas
-translate_body : fname -> (fname, 'l) inst list -> (fname, 'l, string) asminst list
-then List.map of this with an entire ('f, 'l) program or something?
-*)
-
-
-
-(* for testing *)
-(* let translate_inst inst n = *)
-(*     match inst with *)
-(*     | Add -> translate_add *)
-(*     | Sub -> translate_sub *)
-(*     | Neg -> translate_neg *)
-(*     | And -> translate_and *)
-(*     | Or -> translate_or *)
-(*     | Not -> translate_not *)
-(*     | Eq -> translate_eq n *)
-(*     | Lt -> translate_lt n *)
-(*     | Gt -> translate_gt n *)
-(*     | Push (seg, n) -> translate_push seg n *)
-(*     | Pop (seg, n) -> translate_pop seg n *)
-(*     | Call (fn, n) -> translate_call fn n *)
-(*     (1* only for temp testing *1) *)
-(*     | Label name -> translate_label name (Fname "") *)
-(*     | Goto name -> translate_goto name (Fname "") *)
-(*     | IfGoto name -> translate_ifgoto name (Fname "") *)
-(*     (1* /only for temp testing *1) *)
-(*     | _ -> [] *)
-
-(* let rec nat_nums n = *)
-(*     if n = 0 then [] *)
-(*     else nat_nums (n-1) @ [n] *)
-
-(* (1* and infinite loop to be put at the end of *)
-(*    the translated ASM program *1) *)
-(* let prog_end = [ *)
-(*         ldef (Symb "end_of_prog"); *)
-(*         ainst (Symb "end_of_prog"); *)
-(*         uncond_jump *)
-(*     ] *)
-
-(* let translate_prog prog = *)
-(*     let lns = nat_nums (List.length prog) in *)
-(*     let routines = List.map2 translate_inst prog lns in *)
-(*     List.concat routines @ prog_end *)
