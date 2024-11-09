@@ -34,30 +34,30 @@ let unop_routines op = [
 (* list of sub-routines for the translation of
    the comparison operation `op`
    eg : eq, lt, gt  *)
-let comp_routines n op = [
+let comp_routines fn n op = [
     load_top;
     goto_top;
     [
         assign d (minusd mreg);
-        ainst (CompSucc n);
+        ainst (CompSucc (fn, n));
         djump op
     ];
     goto_top;
     [
         assign m (zero);
-        ainst (CompEnd n);
+        ainst (CompEnd (fn, n));
         uncond_jump;
-        ldef (CompSucc n)
+        ldef (CompSucc (fn, n))
     ];
     goto_top;
     [
         assign m (minusone);
-        ldef (CompEnd n)
+        ldef (CompEnd (fn, n))
     ]]
 
 let translate_binop op = List.concat (binop_routines op)
 let translate_unop op = List.concat (unop_routines op)
-let translate_comp n op = List.concat (comp_routines n op)
+let translate_comp fn n op = List.concat (comp_routines fn n op)
 
 let translate_add = translate_binop (dplus mreg)
 let translate_sub = translate_binop (minusd mreg)
@@ -68,9 +68,9 @@ let translate_neg = translate_unop (neg mreg)
 let translate_not = translate_unop (bnot mreg)
 
 (* n denotes the "index" of the comparison instruction *)
-let translate_eq n = translate_comp n jeq
-let translate_lt n = translate_comp n jlt
-let translate_gt n = translate_comp n jgt
+let translate_eq fn n = translate_comp fn n jeq
+let translate_lt fn n = translate_comp fn n jlt
+let translate_gt fn n = translate_comp fn n jgt
 
 
 (* branching operations *)
@@ -89,8 +89,6 @@ let translate_ifgoto ln fn =
 
 (* base addresses of segments *)
 let seg_base = function
-    | This -> 3
-    | That -> 4
     | Static -> 16
     | Pointer -> 3
     | Temp -> 5
@@ -99,6 +97,8 @@ let seg_base = function
 let seg_pointer = function
     | Local -> 1
     | Argument -> 2
+    | This -> 3
+    | That -> 4
     | _ -> -1               (* different translation mechanisms needed *)
 
 let push_routines_base seg n =
@@ -122,10 +122,11 @@ let translate_push_const n =
 let translate_push seg n = 
     match seg with
     | Constant -> translate_push_const n
-    | Local -> List.concat (push_routines_pointer Local n)
-    | Argument -> List.concat (push_routines_pointer Argument n)
-    | other -> List.concat (push_routines_base other n)
-            
+    | Static -> List.concat (push_routines_base Static n)
+    | Pointer -> List.concat (push_routines_base Pointer n)
+    | Temp -> List.concat (push_routines_base Temp n)
+    | other -> List.concat (push_routines_pointer other n)
+
 let pop_routines_base seg n =
     let base = seg_base seg in
     [
@@ -155,51 +156,187 @@ let pop_routines_pointer seg n =
 
 let translate_pop seg n =
     match seg with
-    | Local -> List.concat (pop_routines_pointer Local n)
-    | Argument -> List.concat (pop_routines_pointer Argument n)
-    | other -> List.concat (pop_routines_base other n)
+    | Static -> List.concat (pop_routines_base Static n)
+    | Pointer -> List.concat (pop_routines_base Pointer n)
+    | Temp -> List.concat (pop_routines_base Temp n)
+    | other -> List.concat (pop_routines_pointer other n)
 
 
 (* functions *)
 
-(* begin here *)
+let call_routines fname nargs = [
+    [
+        at nargs;
+        assign d (iden areg);
+        at 5;
+        assign m (iden dreg);
+        ainst (Symb "SP");
+        assign d (iden areg);
+        at 5;
+        assign m (dminus mreg);
+        ainst (Fret fname);
+        assign d (iden areg);
+    ];
+    push_d;
+    push_pointer "LCL";
+    push_pointer "ARG";
+    push_pointer "THIS";
+    push_pointer "THAT";
+    (* x *)
+    get_from_address 5;
+    put_to_symb "ARG";
+    get_from_symb "SP";
+    put_to_symb "LCL";
+    (* x *)
+    [
+        (* at 5; *)
+        (* assign d (iden mreg); *)
+        (* ainst (Symb "ARG"); *)
+        (* assign m (iden dreg); *)
+        (* ainst (Symb "SP"); *)
+        (* assign d (iden mreg); *)
+        (* ainst (Symb "LCL"); *)
+        (* assign m (iden dreg); *)
+
+        ainst (Fcall fname);
+        uncond_jump;                (* transferring control to the function *)
+        ldef (Fret fname);          (* defining the label where fname should return to *)
+    ] ]
+
+let translate_call fname nargs = List.concat (call_routines fname nargs)
+
+let return_routines = [
+    load_top;
+    put_to_address 5;
+    get_from_symb "ARG";
+    put_to_address 6;
+    get_from_symb "LCL";
+    put_to_symb "SP";
+
+    restore_pointer "THAT";
+    restore_pointer "THIS";
+    restore_pointer "ARG";
+    restore_pointer "LCL";
+    
+    load_top;
+    put_to_address 7;
+    get_from_address 6;
+    put_to_symb "SP";
+    get_from_address 5;
+    push_d;
+    [
+        at 7;
+        assign a (iden mreg);
+        uncond_jump
+    ] ]
+
+let translate_return = List.concat return_routines
+
+(* makes a list with `n` elements, all being `ele` *)
+let rec list_make ele n =
+    if n = 0 then []
+    else ele :: (list_make ele (n-1))
+
+let funcdef_routines fname nlocals =
+    [ [ldef (Fcall fname); assign d zero] ] @ (list_make push_d nlocals)
+
+(* a function's 'preamble' *)
+let translate_funcdef fname nlocals = List.concat (funcdef_routines fname nlocals)
 
 
-(* for testing *)
-
-let translate_inst inst n =
-    match inst with
+(* fname : function name
+   ln    : line number  *)
+let translate_inst fname ln = function
     | Add -> translate_add
     | Sub -> translate_sub
     | Neg -> translate_neg
     | And -> translate_and
     | Or -> translate_or
     | Not -> translate_not
-    | Eq -> translate_eq n
-    | Lt -> translate_lt n
-    | Gt -> translate_gt n
+    | Eq -> translate_eq fname ln
+    | Lt -> translate_lt fname ln
+    | Gt -> translate_gt fname ln
     | Push (seg, n) -> translate_push seg n
     | Pop (seg, n) -> translate_pop seg n
-    (* only for temp testing *)
-    | Label name -> translate_label name (Fname "")
-    | Goto name -> translate_goto name (Fname "")
-    | IfGoto name -> translate_ifgoto name (Fname "")
-    (* /only for temp testing *)
-    | _ -> []
+    | Call (fn, n) -> translate_call fn n
+    | Return -> translate_return
+    | Label name -> translate_label name fname
+    | Goto name -> translate_goto name fname
+    | IfGoto name -> translate_ifgoto name fname
 
+(* a helper function to generate the first `n` positive natural numbers *)
 let rec nat_nums n =
     if n = 0 then []
     else nat_nums (n-1) @ [n]
 
-(* and infinite loop to be put at the end of
-   the translated ASM program *)
-let prog_end = [
-        ldef (Symb "end_of_prog");
-        ainst (Symb "end_of_prog");
-        uncond_jump
-    ]
+let translate_body fname body =
+    let line_nums = nat_nums (List.length body) in
+    let translations = List.map2 (translate_inst fname) line_nums body in
+    List.concat translations
+    
+let translate_function { name = fname; locals = nlocs; body = body } =
+    let preamble = translate_funcdef fname nlocs in
+    let body_trans = translate_body fname body in
+    preamble @ body_trans
 
-let translate_prog prog =
-    let lns = nat_nums (List.length prog) in
-    let routines = List.map2 translate_inst prog lns in
-    List.concat routines @ prog_end
+(* entry code in assembly - to enter Main.main*)
+let entry_asm = translate_call (Fname "Main.main") 0
+let exit_asm = [ ainst (Symb "ProgEnd"); uncond_jump ]
+
+let translate_prog (prog : ('f, 'l) program) =
+    let trans = List.concat (List.map translate_function prog) in
+    (* let complete_trans = entry_asm @ exit_asm @ trans in *)
+    let complete_trans = entry_asm @ trans in
+    let end_subroutine = [
+            ldef (Symb "ProgEnd");
+            ainst (Symb "ProgEnd");
+            uncond_jump ] in
+    complete_trans @ end_subroutine
+
+
+(*
+some ideas
+translate_body : fname -> (fname, 'l) inst list -> (fname, 'l, string) asminst list
+then List.map of this with an entire ('f, 'l) program or something?
+*)
+
+
+
+(* for testing *)
+(* let translate_inst inst n = *)
+(*     match inst with *)
+(*     | Add -> translate_add *)
+(*     | Sub -> translate_sub *)
+(*     | Neg -> translate_neg *)
+(*     | And -> translate_and *)
+(*     | Or -> translate_or *)
+(*     | Not -> translate_not *)
+(*     | Eq -> translate_eq n *)
+(*     | Lt -> translate_lt n *)
+(*     | Gt -> translate_gt n *)
+(*     | Push (seg, n) -> translate_push seg n *)
+(*     | Pop (seg, n) -> translate_pop seg n *)
+(*     | Call (fn, n) -> translate_call fn n *)
+(*     (1* only for temp testing *1) *)
+(*     | Label name -> translate_label name (Fname "") *)
+(*     | Goto name -> translate_goto name (Fname "") *)
+(*     | IfGoto name -> translate_ifgoto name (Fname "") *)
+(*     (1* /only for temp testing *1) *)
+(*     | _ -> [] *)
+
+(* let rec nat_nums n = *)
+(*     if n = 0 then [] *)
+(*     else nat_nums (n-1) @ [n] *)
+
+(* (1* and infinite loop to be put at the end of *)
+(*    the translated ASM program *1) *)
+(* let prog_end = [ *)
+(*         ldef (Symb "end_of_prog"); *)
+(*         ainst (Symb "end_of_prog"); *)
+(*         uncond_jump *)
+(*     ] *)
+
+(* let translate_prog prog = *)
+(*     let lns = nat_nums (List.length prog) in *)
+(*     let routines = List.map2 translate_inst prog lns in *)
+(*     List.concat routines @ prog_end *)

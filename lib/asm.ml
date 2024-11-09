@@ -9,11 +9,12 @@
    'l -> label name type
    's -> symbol type  *)
 type ('f, 'l, 's) asminst = 
-    | Flabel of 'f
+    | Fcall of 'f                   (* function call label *)
+    | Fret of 'f                    (* function return label *)
     | Llabel of 'l * 'f             (* label names are local to a function *)
     | Symb of 's
-    | CompSucc of int
-    | CompEnd of int
+    | CompSucc of 'f * int
+    | CompEnd of 'f * int
 
 type func_name = Fname of string                (* a type for function names *)
 type label_name = Lname of string               (* a type for label names    *)

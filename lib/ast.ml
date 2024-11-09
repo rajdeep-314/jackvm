@@ -35,7 +35,7 @@ type ('f, 'l) inst =
 
 type ('f, 'l) func =
     { name : 'f;
-      args : int;
+      locals : int;
       body : ('f, 'l) inst list }
 
 type ('f, 'l) program = ('f, 'l) func list
@@ -56,6 +56,8 @@ module Helper = struct
     let label x = Label (Lname x)
     let goto x = Goto (Lname x)
     let ifgoto x = IfGoto (Lname x)
+    let call fn n = Call (fn, n)
+    let return = Return
 
     (* segments *)
     let local = Local

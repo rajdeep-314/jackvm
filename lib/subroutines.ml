@@ -51,4 +51,43 @@ let push_d = [
     ainst (Symb "SP");
     assign a (iden mreg);
     assign m (iden dreg);
-    ainst (Symb "SP") ] @ incr_sp;
+    ainst (Symb "SP") ] @ incr_sp
+
+
+(* function implementation related subroutines *)
+
+let push_pointer name = [
+    ainst (Symb name);
+    assign d (iden mreg) ] @ push_d
+
+(* used when RAM[SP-1] has a pointer-based segment's old value,
+   updates the segment's pointer register with said value, while
+   decrementing SP by 1  *)
+let restore_pointer name = load_top @ [
+    ainst (Symb name);
+    assign m (iden dreg);
+    ]
+
+(* D = RAM[n] *)
+let get_from_address n = [
+    at n;
+    assign d (iden mreg)
+]
+
+(* RAM[n] = D *)
+let put_to_address n = [
+    at n;
+    assign m (iden dreg)
+]
+
+(* D = RAM[@(Symb name)] *)
+let get_from_symb name = [
+    ainst (Symb name);
+    assign d (iden mreg);
+]
+
+(* RAM[@(Symb name)] = D *)
+let put_to_symb name = [
+    ainst (Symb name);
+    assign m (iden dreg);
+]
