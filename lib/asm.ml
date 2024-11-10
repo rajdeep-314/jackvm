@@ -10,9 +10,9 @@
    's -> symbol type  *)
 type ('f, 'l, 's) asminst = 
     | Fcall of 'f                   (* function call label *)
-    | Fret of 'f                    (* function return label *)
+    | Fret of 'f * 'f * int         (* function return label : (callee, caller, line no.) *)
     | Llabel of 'l * 'f             (* label names are local to a function *)
-    | Symb of 's
+    | Symb of 's                    (* to manage the pre-defined symbols in ASM *)
     | CompSucc of 'f * int
     | CompEnd of 'f * int
 

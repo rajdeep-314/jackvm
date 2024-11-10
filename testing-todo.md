@@ -1,18 +1,20 @@
 # Tasks to do, related to testing
 
-Tests to perform before moving to implementing functions:
 
-- Arithmetic operations
-- Relational opreations
+Things to test:
 
-+++++++++++++ DONE +++++++++++++
+- Same label names across different functions
+- Multiple same comparison operations in same and across different functions
+- Invariance of order in function definitions
 
-- Bitwise operations
-- Branching
-    - Label declaration
-    - Goto
-    - IfGoto
 
-- Stack manipulation
-    - Push
-    - Pop
+Programs to test:
+
+- Iteractive multiplication
+- Recursvie multiplication
+- Iterative fibonacci
+- Recursive fibonacci
+- Iterative factorial
+- Recursive factorial
+- Exponent calculator
+

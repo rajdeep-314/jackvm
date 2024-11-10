@@ -164,7 +164,7 @@ let translate_pop seg n =
 
 (* functions *)
 
-let call_routines fname nargs = [
+let call_routines callee_name nargs caller_name ln = [
     [
         at nargs;
         assign d (iden areg);
@@ -174,7 +174,7 @@ let call_routines fname nargs = [
         assign d (iden mreg);
         at 5;
         assign m (dminus mreg);
-        ainst (Fret fname);
+        ainst (Fret (callee_name, caller_name, ln));
         assign d (iden areg);
     ];
     push_d;
@@ -189,16 +189,18 @@ let call_routines fname nargs = [
     put_to_symb "LCL";
 
     [
-        ainst (Fcall fname);
-        uncond_jump;                (* transferring control to the function *)
-        ldef (Fret fname);          (* defining the label where fname should return to *)
+        ainst (Fcall callee_name);
+        uncond_jump;                    (* transferring control to the function *)
+        ldef (Fret (callee_name, caller_name, ln));        (* defining the label where fname should return to *)
     ] ]
 
-let translate_call fname nargs = List.concat (call_routines fname nargs)
+let translate_call callee_name nargs caller_name ln = List.concat (call_routines callee_name nargs caller_name ln)
 
 let return_routines = [
     load_top;
     put_to_address 5;
+    get_from_symb "ARG";
+    put_to_address 6;
     get_from_symb "LCL";
     put_to_symb "SP";
 
@@ -208,11 +210,13 @@ let return_routines = [
     restore_pointer "LCL";
     
     load_top;
-    put_to_address 6;
+    put_to_address 7;
+    get_from_address 6;
+    put_to_symb "SP";
     get_from_address 5;
     push_d;
     [
-        at 6;
+        at 7;
         assign a (iden mreg);
         uncond_jump
     ] ]
@@ -245,7 +249,7 @@ let translate_inst fname ln = function
     | Gt -> translate_gt fname ln
     | Push (seg, n) -> translate_push seg n
     | Pop (seg, n) -> translate_pop seg n
-    | Call (fn, n) -> translate_call fn n
+    | Call (fn, n) -> translate_call fn n fname ln
     | Return -> translate_return
     | Label name -> translate_label name fname
     | Goto name -> translate_goto name fname
@@ -267,7 +271,7 @@ let translate_function { name = fname; locals = nlocs; body = body } =
     preamble @ body_trans
 
 (* entry code in assembly - to enter Main.main*)
-let entry_asm = translate_call (Fname "Main.main") 0
+let entry_asm = translate_call (Fname "Main.main") 0 (Fname "Sys.init") 1
 let exit_asm = [ ainst (Symb "ProgEnd"); uncond_jump ]
 
 let translate_prog (prog : ('f, 'l) program) =
