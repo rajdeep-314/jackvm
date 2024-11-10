@@ -4,8 +4,10 @@
 Things to test:
 
 - Same label names across different functions
-- Multiple same comparison operations in same and across different functions
+- Pushing and popping across various segments, maybe try using static for "communication" across functions
 - Invariance of order in function definitions
+>>>>>
+- Multiple same comparison operations in same and across different functions
 
 
 Programs to test:
@@ -14,7 +16,9 @@ Programs to test:
 - Recursvie multiplication
 - Iterative fibonacci
 - Recursive fibonacci
-- Iterative factorial
+- "Mega multiplication" function
 - Recursive factorial
+>>>>>
+- Iterative factorial
 - Exponent calculator
 

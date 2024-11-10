@@ -168,10 +168,10 @@ let call_routines callee_name nargs caller_name ln = [
     [
         at nargs;
         assign d (iden areg);
-        at 5;
-        assign m (iden dreg);
-        ainst (Symb "SP");
-        assign d (iden mreg);
+    ];
+    put_to_address 5;
+    get_from_symb "SP";
+    [
         at 5;
         assign m (dminus mreg);
         ainst (Fret (callee_name, caller_name, ln));
@@ -190,8 +190,8 @@ let call_routines callee_name nargs caller_name ln = [
 
     [
         ainst (Fcall callee_name);
-        uncond_jump;                    (* transferring control to the function *)
-        ldef (Fret (callee_name, caller_name, ln));        (* defining the label where fname should return to *)
+        uncond_jump;                                        (* transferring control to the function *)
+        ldef (Fret (callee_name, caller_name, ln));         (* defining the label where fname should return to *)
     ] ]
 
 let translate_call callee_name nargs caller_name ln = List.concat (call_routines callee_name nargs caller_name ln)

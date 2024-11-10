@@ -14,3 +14,9 @@ type ('f, 'l, 's) asminst =
         | Llabel of 'l
         | Symbol of 's
 ```
+
+
+# Some new additions
+
+- Write a parser
+- Get rid of the helper functions after the parser is made

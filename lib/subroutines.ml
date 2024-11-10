@@ -22,10 +22,7 @@ let load_top = [
 
 (* loads `base + off` into A *)
 let goto_base_offset base off = [
-    at off;
-    assign d (iden areg);
-    at base;
-    assign a (dplus mreg) ]
+    at (base + off) ]
 
 (* loads `RAM[base + off]` into D *)
 let load_base_offset base off = 
