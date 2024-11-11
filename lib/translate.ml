@@ -9,6 +9,7 @@
 open Ast
 open Asm
 open Subroutines
+open Bootstrap
 open Assembler.Ast.Helper
 
 
@@ -270,17 +271,12 @@ let translate_function { name = fname; locals = nlocs; body = body } =
     let body_trans = translate_body fname body in
     preamble @ body_trans
 
-(* entry code in assembly - to enter Main.main*)
-let entry_asm = translate_call (Fname "Main.main") 0 (Fname "Sys.init") 1
-let exit_asm = [ ainst (Symb "ProgEnd"); uncond_jump ]
 
+(* the combined translation function, which incorporates
+   the bootstrap code from bootstrap.ml as well *)
 let translate_prog (prog : ('f, 'l) program) =
-    let trans = List.concat (List.map translate_function prog) in
-    let complete_trans = entry_asm @ exit_asm @ trans in
-    (* let complete_trans = entry_asm @ trans in *)
-    let end_subroutine = [
-            ldef (Symb "ProgEnd");
-            ainst (Symb "ProgEnd");
-            uncond_jump ] in
-    complete_trans @ end_subroutine
+    let complete_prog = sys_init_func :: prog in
+    let trans_routines = List.map translate_function complete_prog in
+    let complete_trans = asm_bootstrap @ (List.concat trans_routines) in
+    complete_trans
 

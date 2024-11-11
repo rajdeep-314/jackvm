@@ -208,3 +208,75 @@ let megamul_body = [
 ]
 
 let megamul = { name = Fname "megamul"; locals = 10; body = megamul_body }
+
+
+(* recursive factorial function using `megamul`
+   as it's multiplication function *)
+let rec_fac_body = [
+    push argument 0;
+    push constant 0;
+    eq;
+    ifgoto "base_case";
+
+    push argument 0;
+    push constant 1;
+    sub;
+    call (Fname "rec_fac") 1;
+    push argument 0;
+    call (Fname "megamul") 2;
+    return;
+
+    label "base_case";
+    push constant 1;
+    return;
+]
+
+let rec_fac = { name = Fname "rec_fac"; locals = 0; body = rec_fac_body }
+
+
+
+(* floor of a/b *)
+let intdiv_body = [
+    push argument 0;
+    push argument 1;
+    lt;
+    ifgoto "base_case";
+
+    push argument 0;
+    push argument 1;
+    sub;
+    push argument 1;
+    call (Fname "intdiv") 2;
+    push constant 1;
+    add;
+    return;
+    
+    label "base_case";
+    push constant 0;
+    return;
+]
+
+let intdiv = { name = Fname "intdiv"; locals = 0; body = intdiv_body }
+
+
+
+(* a mod b *)
+let modulo_body = [
+    push argument 0;
+    push argument 1;
+    lt;
+    ifgoto "base_case";
+
+    push argument 0;
+    push argument 1;
+    sub;
+    push argument 1;
+    call (Fname "modulo") 2;
+    return;
+
+    label "base_case";
+    push argument 0;
+    return;
+]
+
+let modulo = { name = Fname "modulo"; locals = 0; body = modulo_body }

@@ -18,5 +18,10 @@ type ('f, 'l, 's) asminst =
 
 # Some new additions
 
+- Go through the github page for the translations, comparing what they've mentioned with
+    what you've done. Make changes, if necessary
+- Try running the test case files provided in the VM emulator
 - Write a parser
 - Get rid of the helper functions after the parser is made
+- Once the parser is made, maybe try out the OS libraries
+- Before submitting, go through the `.org` file in sir's repository, to sync the "format"
