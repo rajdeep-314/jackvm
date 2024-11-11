@@ -119,7 +119,7 @@ let push_routines_pointer seg n =
 let translate_push_const n = 
     let routines = [ [at n; assign d (iden areg)]; push_d ] in
     List.concat routines
-    
+
 let translate_push seg n = 
     match seg with
     | Constant -> translate_push_const n
@@ -127,6 +127,7 @@ let translate_push seg n =
     | Pointer -> List.concat (push_routines_base Pointer n)
     | Temp -> List.concat (push_routines_base Temp n)
     | other -> List.concat (push_routines_pointer other n)
+
 
 let pop_routines_base seg n =
     let base = seg_base seg in
@@ -141,7 +142,7 @@ let pop_routines_base seg n =
 let pop_routines_pointer seg n =
     let pointer = seg_pointer seg in
     [
-        load_pointer_offset pointer n;
+        goto_pointer_offset pointer n;
         [
             assign d (iden areg);
             at 5;                       (* temp[0] is the address 5 *)
@@ -154,7 +155,7 @@ let pop_routines_pointer seg n =
             assign m (iden dreg);
         ]
     ]
-
+    
 let translate_pop seg n =
     match seg with
     | Static -> List.concat (pop_routines_base Static n)

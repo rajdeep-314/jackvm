@@ -8,61 +8,31 @@
 open Ast
 open Ast.Helper
 
-(* a mod b *)
-let modulo_body = [
-    push argument 0;
-    push argument 1;
-    lt;
-    ifgoto "base_case";
-
-    push argument 0;
-    push argument 1;
-    sub;
-    push argument 1;
-    call (Fname "modulo") 2;
+let func_body = [
+    push constant 42;
+    push constant 43;
+    eq;
+    ifgoto "eq1";
+    push constant 34;
+    push constant 34;
+    eq;
+    ifgoto "eq2";
+    label "eq1";
+    push constant 42;
     return;
-
-    label "base_case";
-    push argument 0;
+    label "eq2";
+    push constant 69;
     return;
 ]
 
-let modulo = { name = Fname "modulo"; locals = 0; body = modulo_body }
-
-(* floor of a/b *)
-let intdiv_body = [
-    push argument 0;
-    push argument 1;
-    lt;
-    ifgoto "base_case";
-
-    push argument 0;
-    push argument 1;
-    sub;
-    push argument 1;
-    call (Fname "intdiv") 2;
-    push constant 1;
-    add;
-    return;
-    
-    label "base_case";
-    push constant 0;
-    return;
-]
-
-let intdiv = { name = Fname "intdiv"; locals = 0; body = intdiv_body }
+let func = { name = Fname "func"; locals = 0; body = func_body }
 
 let main_body = [
-    push constant 107;
-    push constant 7;
-    call (Fname "modulo") 2;
-    push constant 107;
-    push constant 7;
-    call (Fname "intdiv") 2;
-    add;
+    call (Fname "func") 0;
     return;
 ]
 
 let main = { name = Fname "Main.main"; locals = 0; body = main_body }
 
-let myprog = [modulo; main; intdiv]
+let myprog = [main; func]
+

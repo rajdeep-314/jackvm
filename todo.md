@@ -1,25 +1,7 @@
 # To do
 
-- Need to set up the segment variables for the first function call
-
-- Need to have (END) @END 0;JMP at the end to get in an infinite loop
-
-- Need to enter Main.main at the beginning
-
-- Need multiple function label types? Entering and returning? Maybe
-```ocaml
-type ('f, 'l, 's) asminst =
-        | Fcall of 'f
-        | Freturn of 'f
-        | Llabel of 'l
-        | Symbol of 's
-```
-
-
-# Some new additions
-
-- Go through the github page for the translations, comparing what they've mentioned with
-    what you've done. Make changes, if necessary
+- Change push and pop implementation for the static segment?
+- Enable compiling multiple files?
 - Try running the test case files provided in the VM emulator
 - Write a parser
 - Get rid of the helper functions after the parser is made
