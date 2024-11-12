@@ -87,6 +87,8 @@ let translate_ifgoto ln fn =
 
 (* stack manipulation *)
 
+(* extract "<name>" from "<name>.vm"
+   'raw' here refers to a file name without an extension *)
 let extract_raw_name fname =
     String.sub fname 0 (String.length fname - 3)
 
