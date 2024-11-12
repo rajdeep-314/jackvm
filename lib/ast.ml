@@ -40,8 +40,7 @@ type ('f, 'l) func =
 
 type ('f, 'l) program = ('f, 'l) func list
 
-module Helper = struct
-    include Asm
+module JVMHelper = struct
     let push s n = Push (s, n)
     let pop s n = Pop (s, n)
     let add = Add
@@ -53,9 +52,9 @@ module Helper = struct
     let band = And
     let bor = Or
     let bnot = Not
-    let label x = Label (Lname x)
-    let goto x = Goto (Lname x)
-    let ifgoto x = IfGoto (Lname x)
+    (* let label x = Label (Lname x) *)
+    (* let goto x = Goto (Lname x) *)
+    (* let ifgoto x = IfGoto (Lname x) *)
     let call fn n = Call (fn, n)
     let return = Return
 

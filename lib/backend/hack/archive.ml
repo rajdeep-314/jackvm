@@ -5,8 +5,8 @@
     use in testing
 *)
 
-open Ast
-open Ast.Helper
+open Jackvm.Ast
+open Helper
 
 (* iterative multiplication function *)
 let iter_mul_body = [

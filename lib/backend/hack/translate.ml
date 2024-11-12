@@ -6,7 +6,7 @@
 *)
 
 
-open Ast
+open Jackvm.Ast
 open Asm
 open Subroutines
 open Bootstrap

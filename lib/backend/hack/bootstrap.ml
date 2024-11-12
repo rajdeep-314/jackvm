@@ -5,8 +5,9 @@
     for the translated VM code to be executed
 *)
 
-open Ast
-open Ast.Helper
+open Jackvm.Ast
+open Helper
+open Asm
 open Assembler.Ast.Helper
 
 (* some assembler bootstrap code, it sets SP
