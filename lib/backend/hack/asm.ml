@@ -1,9 +1,12 @@
 (*
     asm.ml
 
-    contains types for the abstract ASM code that the VM
-    code will get translated into
+    Contains types for the abstract ASM code that the VM
+    code will get translated into, and functions related to
+    the same
 *)
+
+open Jackvm.Ast
 
 (* 'f -> function name type
    'l -> label name type
@@ -16,8 +19,6 @@ type ('f, 'l, 's) asminst =
     | CompSucc of 'f * int
     | CompEnd of 'f * int
 
-type func_name = Fname of string                (* a type for function names *)
-type label_name = Lname of string               (* a type for label names    *)
 
 (* pre-defined symbols for the assembly code *)
 let predefs =
@@ -29,5 +30,9 @@ let predefs =
         ("SP", 0); ("LCL", 1); ("ARG", 2); ("THIS", 3); ("THAT", 4)] in
     List.map (fun (x, y) -> (Symb x, y)) ls
 
+
+(* a hashtable consisting of pre-defined symbols, to be
+   passed as an argument to Assembler.Encode.assemble *)
 let table : (((func_name, label_name, string) asminst, int) Hashtbl.t)=
     Hashtbl.of_seq (List.to_seq predefs)
+

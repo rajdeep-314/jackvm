@@ -1,11 +1,13 @@
 (*
     parser.ml
 
-    for parsing
+    A parser to parse string input to JVM AST
+    This parser isn't good with error messages at all,
+    it assumes correct input
 *)
 
-open Jackvm.Ast
-open Helper
+open Ast
+open Ast.Helper
 
 (* slices `input` from index `start` to the end *)
 let slice_string (input : string) (start : int) : string =
@@ -74,6 +76,7 @@ let is_identifier (input : string) : bool =
         String.contains valid_identifier_begin input.[0] &&
         (is_identifier_post (slice_string input 1))
 
+(* returns if `input` is a valid non-negative integer *)
 let rec is_num (input : string) : bool =
     if  input = "" then true
     else if String.contains digits input.[0] then
@@ -83,14 +86,15 @@ let rec is_num (input : string) : bool =
 
 (* validation functions *)
 
-(* validates operations - arithmetic, bitwise, relational *)
+(* validates operations - arithmetic, bitwise and relational *)
 let validate_op input =
     List.mem input ["add"; "sub"; "neg"; "and"; "or"; "not"; "lt"; "gt"; "eq"]
 
+(* validates segment names *)
 let is_segment input =
     List.mem input ["constant"; "this"; "that"; "argument"; "local"; "temp"; "pointer"; "static"]
 
-(* validates a stack manipulation instruction *)
+(* validates stack manipulation instructions *)
 let validate_stackmanip input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     if List.length parts != 3 then false
@@ -102,6 +106,7 @@ let validate_stackmanip input =
         is_segment p2 &&
         is_num p3
 
+(* validates a function definition *)
 let validate_funcdef input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     if List.length parts != 3 then false
@@ -111,6 +116,7 @@ let validate_funcdef input =
         let p3 = List.nth parts 2 in
         List.length parts = 3 && p1 = "function" && is_identifier p2 && is_num p3
 
+(* validates a call instruction *)
 let validate_call input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     if List.length parts != 3 then false
@@ -120,8 +126,10 @@ let validate_call input =
         let p3 = List.nth parts 2 in
         p1 = "call" && is_identifier p2 && is_num p3
 
+(* validates a return instruction *)
 let validate_return input = input = "return"
 
+(* validates a label definition instruction *)
 let validate_label input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     if List.length parts != 2 then false
@@ -130,6 +138,7 @@ let validate_label input =
         let p2 = List.nth parts 1 in
         p1 = "label" && is_identifier p2
 
+(* validates a goto instruction *)
 let validate_goto input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     if List.length parts != 2 then false
@@ -138,6 +147,7 @@ let validate_goto input =
         let p2 = List.nth parts 1 in
         p1 = "goto" && is_identifier p2
 
+(* validates a conditional goto instruction *)
 let validate_ifgoto input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     if List.length parts != 2 then false
@@ -149,11 +159,13 @@ let validate_ifgoto input =
 
 (* tokenization functions *)
 
+(* tokenizes operation instructions - arithmetic, bitwise and relational *)
 let tokenize_op  = function
     | "add" -> add | "sub" -> sub | "neg" -> neg
     | "and" -> band | "or" -> bor | "not" -> bnot
     | "lt" -> lt | "gt" -> gt | _ -> eq
 
+(* tokenizes stack manipulation instructions *)
 let tokenize_stackmanip input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     let p1 = ( match List.nth parts 0 with
@@ -165,25 +177,31 @@ let tokenize_stackmanip input =
     let p3 = int_of_string (List.nth parts 2) in
     p1 p2 p3
 
+(* tokenizes call instructions *)
 let tokenize_call input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     call (Fname (List.nth parts 1)) (int_of_string (List.nth parts 2))
 
+(* tokenizes return instructions *)
 let tokenize_return = return
 
+(* tokenzes label definition instructions *)
 let tokenize_label input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     label (List.nth parts 1)
 
+(* tokenizes goto instructions *)
 let tokenize_goto input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     goto (List.nth parts 1)
 
+(* tokenizes conditional goto instructions *)
 let tokenize_ifgoto input =
     let parts = remove_empty_lines (String.split_on_char ' ' input) in
     ifgoto (List.nth parts 1)
 
 
+(* combines the above functions to tokenize an instruction *)
 let tokenize_inst input =
     if validate_op input
         then tokenize_op input
@@ -202,7 +220,8 @@ let tokenize_inst input =
     else goto ""
 
 
-(* tokenizes a list of strings *)
+(* tokenizes a list of strings recursively, `prev` denoting
+   the result of tokenizing the previous input (if any)  *)
 let rec tokenize_program input prev =
     match input with
     | [] -> prev

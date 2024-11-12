@@ -30,7 +30,7 @@ let () =
     let channels = List.map open_in files in
     let text_progs = List.map read_lines channels in
     (* parsing text programs to get AST programs *)
-    let programs = List.map Hack.Parser.tokenize_file text_progs in
+    let programs = List.map Jackvm.Parser.tokenize_file text_progs in
     (* translating each program to ASM AST *)
     let assembly_progs = List.map2 (fun x y -> Hack.Translate.translate_prog x y) files programs in
     (* concatenating all ASM programs into one *)

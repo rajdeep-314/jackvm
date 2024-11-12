@@ -1,9 +1,11 @@
 (*
     subroutines.ml
 
-    subroutines here refer to a bunch of ASM instructions that are
+    Subroutines here refer to a bunch of ASM instructions that are
     frequently used in the translated VM instructions
-    they make the code easier to understand and maintain
+    they make the code easier to understand and maintain.
+
+    Some subroutines take arguments, which make them quite versatile
 *)
 
 open Asm
@@ -53,6 +55,7 @@ let push_d = [
 
 (* function implementation related subroutines *)
 
+(* pushes value pointed by `name` to the stack's top *)
 let push_pointer name = [
     ainst (Symb name);
     assign d (iden mreg) ] @ push_d

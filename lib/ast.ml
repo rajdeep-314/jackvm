@@ -5,6 +5,7 @@
     variants and records
 *)
 
+(* the virtual machine's segments *)
 type segment =
     | Local
     | Argument
@@ -15,6 +16,8 @@ type segment =
     | Pointer
     | Temp
 
+(* 'f -> function name type
+   'l -> label name type  *)
 type ('f, 'l) inst =
     | Add | Sub | Neg           (* arithmetic *)
     | Eq | Lt | Gt              (* relational *)
@@ -38,12 +41,17 @@ type ('f, 'l) func =
       locals : int;
       body : ('f, 'l) inst list }
 
+(* a VM program is a list of function definitions *)
 type ('f, 'l) program = ('f, 'l) func list
 
+
+type func_name = Fname of string                (* a type for function names *)
+type label_name = Lname of string               (* a type for label names    *)
+
+
 (* module with helper functions to generate VM AST *)
-module JVMHelper = struct
-    let push s n = Push (s, n)
-    let pop s n = Pop (s, n)
+module Helper = struct
+    (* operations *)
     let add = Add
     let sub = Sub
     let neg = Neg
@@ -53,11 +61,13 @@ module JVMHelper = struct
     let band = And
     let bor = Or
     let bnot = Not
-    (* let label x = Label (Lname x) *)
-    (* let goto x = Goto (Lname x) *)
-    (* let ifgoto x = IfGoto (Lname x) *)
-    let call fn n = Call (fn, n)
-    let return = Return
+
+    (* stack manipulation *)
+    let push s n = Push (s, n)
+    let pop s n = Pop (s, n)
+    let label x = Label (Lname x)
+    let goto x = Goto (Lname x)
+    let ifgoto x = IfGoto (Lname x)
 
     (* segments *)
     let local = Local
@@ -68,4 +78,8 @@ module JVMHelper = struct
     let static = Static
     let pointer = Pointer
     let temp = Temp
+
+    (* functions *)
+    let call fn n = Call (fn, n)
+    let return = Return
 end

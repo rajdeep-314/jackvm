@@ -1,7 +1,7 @@
 (*
     translate.ml
     
-    contains functions to translate VM code to it's corresponding
+    Contains functions to translate VM code to it's corresponding
     ASM code
 *)
 
@@ -90,12 +90,13 @@ let translate_ifgoto ln fn =
 let extract_raw_name fname =
     String.sub fname 0 (String.length fname - 3)
 
-(* base addresses of segments *)
+(* base addresses of some segments *)
 let seg_base = function
     | Pointer -> 3
     | Temp -> 5
     | _ -> -1               (* different translation mechanisms needed *)
 
+(* base addresses of pointers to some segments *)
 let seg_pointer = function
     | Local -> 1
     | Argument -> 2
@@ -257,8 +258,9 @@ let funcdef_routines fname nlocals =
 let translate_funcdef fname nlocals = List.concat (funcdef_routines fname nlocals)
 
 
-(* fname : function name
-   ln    : line number  *)
+(* file_name : file name (xyz.vm)
+   fname     : function name
+   ln        : line number  *)
 let translate_inst file_name fname ln = function
     | Add -> translate_add
     | Sub -> translate_sub
@@ -282,19 +284,19 @@ let rec nat_nums n =
     if n = 0 then []
     else nat_nums (n-1) @ [n]
 
+(* translates the body `body` of a function named `fname`, inside `file_name` *)
 let translate_body file_name fname body =
     let line_nums = nat_nums (List.length body) in
     let translations = List.map2 (translate_inst file_name fname) line_nums body in
     List.concat translations
     
+(* translates the given function pattern, inside `file_name` *)
 let translate_function file_name { name = fname; locals = nlocs; body = body } =
     let preamble = translate_funcdef fname nlocs in
     let body_trans = translate_body file_name fname body in
     preamble @ body_trans
 
-
-(* the combined translation function, which incorporates
-   the bootstrap code from bootstrap.ml as well *)
+(* translates an entire program *)
 let translate_prog file_name (prog : ('f, 'l) program) =
     let trans_routines = List.map (translate_function file_name) prog in
     List.concat trans_routines

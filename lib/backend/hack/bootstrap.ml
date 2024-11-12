@@ -1,12 +1,14 @@
 (*
     bootstrap.ml
 
-    bootstrap code - code that will set up the 'environment'
-    for the translated VM code to be executed
+    Bootstrap code - code that will set up the 'environment'
+    for the translated VM code to be executed, namely:
+        - Initializing SP to 256
+        - Calling Sys.init
 *)
 
 open Jackvm.Ast
-open Helper
+open Jackvm.Ast.Helper
 open Asm
 open Assembler.Ast.Helper
 
@@ -17,10 +19,11 @@ let sp_init_asm = [
     ainst (Symb "SP");
     assign m (iden dreg); ]
 
+(* a call to Sys.init, with 0 arguments *)
 let sys_init_call = call (Fname "Sys.init") 0
 
-(* the Sys.init function, where the execution begins
-   it calls Main.main and then gets in an infinite loop *)
+(* the Sys.init function, where the execution begins -
+   it calls Main.main and then enters an infinite loop *)
 let sys_init_func =
     { name = Fname "Sys.init";
       locals = 0;
@@ -29,8 +32,10 @@ let sys_init_func =
           label "INF_LOOP";
           goto "INF_LOOP" ] }
 
+(* ASM translations of the above VM snippets *)
 let sys_init_call_asm = Translate.translate_call (Fname "Sys.init") 0 (Fname "") 1
 let sys_init_func_asm = Translate.translate_function ".vm" sys_init_func
 
+(* the complete bootstrapping ASM code *)
 let bootstrap_asm = sp_init_asm @ sys_init_call_asm @ sys_init_func_asm
 
