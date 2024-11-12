@@ -10,13 +10,14 @@ open Helper
 open Asm
 open Assembler.Ast.Helper
 
-(* some assembler bootstrap code, it sets SP
-   to be 256 *)
-let asm_bootstrap = [
+(* assembler code to initialize SP to 256 *)
+let sp_init_asm = [
     at 256;
     assign d (iden areg);
     ainst (Symb "SP");
     assign m (iden dreg); ]
+
+let sys_init_call = call (Fname "Sys.init") 0
 
 (* the Sys.init function, where the execution begins
    it calls Main.main and then gets in an infinite loop *)
@@ -27,3 +28,9 @@ let sys_init_func =
           call (Fname "Main.main") 0;
           label "INF_LOOP";
           goto "INF_LOOP" ] }
+
+let sys_init_call_asm = Translate.translate_call (Fname "Sys.init") 0 (Fname "") 1
+let sys_init_func_asm = Translate.translate_function ".vm" sys_init_func
+
+let bootstrap_asm = sp_init_asm @ sys_init_call_asm @ sys_init_func_asm
+

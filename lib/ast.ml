@@ -40,6 +40,7 @@ type ('f, 'l) func =
 
 type ('f, 'l) program = ('f, 'l) func list
 
+(* module with helper functions to generate VM AST *)
 module JVMHelper = struct
     let push s n = Push (s, n)
     let pop s n = Pop (s, n)
