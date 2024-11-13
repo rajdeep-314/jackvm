@@ -18,9 +18,9 @@ let slice_string (input : string) (start : int) : string =
 (* strips `input` of whitespaces (' ' and '\t) on
    either of it's sides  *)
 let rec remove_whitespaces (input : string) =
-    if (String.starts_with ~prefix:" " input) || (String.starts_with ~prefix:"\t" input) then
+    if (String.starts_with ~prefix:" " input) || (String.starts_with ~prefix:"\t" input) || (String.starts_with ~prefix:"\r" input) then
         remove_whitespaces (slice_string input 1)
-    else if (String.ends_with ~suffix:" " input) || (String.ends_with ~suffix:"\t" input) then
+    else if (String.ends_with ~suffix:" " input) || (String.ends_with ~suffix:"\t" input) || (String.ends_with ~suffix:"\r" input) then
         remove_whitespaces (String.sub input 0 ((String.length input) - 1))
     else
         input
