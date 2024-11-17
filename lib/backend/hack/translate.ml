@@ -281,15 +281,9 @@ let translate_inst file_name fname ln = function
     | Goto name -> translate_goto name fname
     | IfGoto name -> translate_ifgoto name fname
 
-(* a helper function to generate the first `n` positive natural numbers *)
-let rec nat_nums n =
-    if n = 0 then []
-    else nat_nums (n-1) @ [n]
-
 (* translates the body `body` of a function named `fname`, inside `file_name` *)
 let translate_body file_name fname body =
-    let line_nums = nat_nums (List.length body) in
-    let translations = List.map2 (translate_inst file_name fname) line_nums body in
+    let translations = List.mapi (translate_inst file_name fname) body in
     List.concat translations
     
 (* translates the given function pattern, inside `file_name` *)

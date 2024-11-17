@@ -33,7 +33,7 @@ let sys_init_func =
           goto "INF_LOOP" ] }
 
 (* ASM translations of the above VM snippets *)
-let sys_init_call_asm = Translate.translate_call (Fname "Sys.init") 0 (Fname "") 1
+let sys_init_call_asm = Translate.translate_call (Fname "Sys.init") 0 (Fname "") 0
 let sys_init_func_asm = Translate.translate_function ".vm" sys_init_func
 
 (* the complete bootstrapping ASM code *)
