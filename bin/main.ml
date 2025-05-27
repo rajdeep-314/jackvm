@@ -10,13 +10,14 @@
 (* reads lines from in_channel and returns a string *)
 let read_lines fname =
     let lines = ref [] in
+    let () =
     try
         while true; do
-        lines := input_line fname :: !lines
+            lines := input_line fname :: !lines
         done
     with End_of_file ->
-        close_in fname;
-        String.concat "\n" (List.rev !lines)
+        close_in fname
+    in String.concat "\n" (List.rev !lines)
 
 (* extracts the 'tail' of a list *)
 let tail = function
