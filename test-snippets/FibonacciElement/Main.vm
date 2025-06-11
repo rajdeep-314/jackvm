@@ -1,0 +1,20 @@
+function Main.fibonacci 0
+    push argument 0
+    push constant 2
+    lt
+    if-goto BASE_CASE
+
+    push argument 0
+    push constant 1
+    sub
+    call Main.fibonacci 1
+    push argument 0
+    push constant 2
+    sub
+    call Main.fibonacci 1
+    add
+    return
+
+    label BASE_CASE
+    push argument 0
+    return

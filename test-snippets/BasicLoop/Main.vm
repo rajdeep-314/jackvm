@@ -1,0 +1,22 @@
+function basic 0
+    push argument 0
+    push constant 0
+    eq
+    if-goto BASE_CASE
+
+    push argument 0
+    push constant 1
+    sub
+    call basic 1
+    push argument 0
+    add
+    return
+
+    label BASE_CASE
+    push constant 0
+    return
+
+function Main.main 0
+    push constant 100
+    call basic 1
+    return

@@ -1,0 +1,7 @@
+function Sys.init 0
+    push constant 10
+    call Main.fibonacci 1           // evaluating fib(10)
+
+    // infinite loop
+    label INF_LOOP
+    goto INF_LOOP
